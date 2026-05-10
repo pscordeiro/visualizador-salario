@@ -1,52 +1,64 @@
 # Visualizador de Salário
 
-Self-hosted dashboard for Brazilian payroll PDFs (holerites). Drop your contracheque PDFs, get charts: salary evolution, gross vs net, taxes paid (INSS/IRRF), FGTS accrued, year-over-year breakdown.
+Dashboard self-hosted para visualizar e analisar holerites brasileiros em PDF. Faça upload dos seus contracheques e veja gráficos: evolução salarial, bruto vs líquido, impostos pagos (INSS/IRRF), FGTS acumulado, totais por ano.
 
-**Everything runs and is processed locally on your machine** — payroll data is sensitive, so nothing leaves your computer (no telemetry, no third-party APIs, no cloud).
+**Roda e processa tudo localmente na sua máquina** — holerite tem dado sensível (salário, CPF, CNPJ do empregador), então nada sai do seu computador (sem telemetria, sem chamadas a APIs externas, sem cloud).
 
-> 🇧🇷 Read in Portuguese: [README.pt-BR.md](./README.pt-BR.md)
+> 🇺🇸 English: [docs/README.en.md](./docs/README.en.md)
 
-![stack](https://img.shields.io/badge/.NET-10-512BD4) ![stack](https://img.shields.io/badge/Vue-3-42b883) ![stack](https://img.shields.io/badge/Python-3-3776AB) ![stack](https://img.shields.io/badge/SQLite-3-003B57) ![license](https://img.shields.io/badge/license-MIT-green)
+![stack](https://img.shields.io/badge/.NET-10-512BD4) ![stack](https://img.shields.io/badge/Vue-3-42b883) ![stack](https://img.shields.io/badge/Python-3-3776AB) ![stack](https://img.shields.io/badge/SQLite-3-003B57) ![license](https://img.shields.io/badge/licença-MIT-green)
 
-## Why
-Most people only see the bottom number on payday. With a few PDFs and one `docker compose up`, you get a clear picture of how your compensation evolves, what the government takes, and how vacation/13th salary stack up.
+## Motivação
+A maioria das pessoas só vê o número final do salário. Com alguns PDFs e um `docker compose up`, você passa a enxergar como sua remuneração evolui, quanto o governo tira e como férias/13º se somam ao total.
 
-## Features
-- Multi-user with JWT (access + refresh token rotation, BCrypt-hashed)
-- Drag & drop upload, batch processing, reprocessing
-- Auto-detects payroll type: regular monthly, vacation, 13th salary (advance/full), complementary/PLR
-- Per-user data isolation (you only ever see your own holerites)
-- Dashboards with [Apache ECharts](https://echarts.apache.org/): salary evolution, gross/net, tax distribution, year totals
-- Drill-down per holerite with all "rubricas" (line items)
-- "Hide values" toggle for screenshots/screen sharing
-- Generic parser for common Brazilian payroll layouts
+## Funcionalidades
+- Multi-usuário com JWT (access + refresh token com rotação, senhas com BCrypt)
+- Upload com drag & drop, processamento em lote, reprocessamento
+- Detecta automaticamente o tipo de folha: mensal, férias, 13º (adiantamento/integral), complementar/PLR
+- Isolamento de dados por usuário (você só vê seus próprios holerites)
+- Dashboards em [Apache ECharts](https://echarts.apache.org/): evolução salarial, bruto/líquido, distribuição de impostos, totais por ano
+- Drill-down por holerite com todas as rubricas
+- Botão para ocultar valores (útil para screenshots / compartilhar tela)
+- Parser genérico para layouts comuns de holerite brasileiro
 
-## Quick start (Docker)
+## Screenshots
+
+![Dashboard principal com gráficos de evolução salarial, bruto vs líquido, resumo anual e distribuição de impostos](docs/imgs/dash-geral.jpeg)
+
+| Meus Arquivos | Detalhe do Holerite |
+|---|---|
+| ![Tela de upload e gerenciamento de holerites](docs/imgs/meus-arquivos.jpeg) | ![Holerite expandido mostrando todas as rubricas](docs/imgs/detalhe-holerite.jpeg) |
+
+| Impostos Detalhados | Login |
+|---|---|
+| ![Tabela detalhada de impostos por competência, com totais INSS e IRRF](docs/imgs/detalhe-imposto.jpeg) | ![Tela de login](docs/imgs/login.jpeg) |
+
+## Início rápido (Docker)
 ```bash
 cp .env.example .env
-# Edit .env and set JWT_SECRET to a random 32+ char string
-# (e.g. openssl rand -base64 48)
+# Edite .env e defina JWT_SECRET com uma string aleatória de 32+ chars
+# (exemplo: openssl rand -base64 48)
 
 docker compose up -d --build
 ```
 
 - App: http://localhost:8080
-- API docs (Scalar): http://localhost:5074/docs
-- OpenAPI spec: http://localhost:5074/openapi/v1.json
+- Docs da API (Scalar): http://localhost:5074/docs
+- Especificação OpenAPI: http://localhost:5074/openapi/v1.json
 
-## Quick start (local dev)
-Requires .NET 10 SDK, Node 20+, Python 3.10+.
+## Início rápido (dev local)
+Requer .NET 10 SDK, Node 20+, Python 3.10+.
 
 ```bash
 # 1) Backend
 cd apps/api
 dotnet run                    # http://localhost:5074
 
-# 2) Extractor venv (one-time setup)
+# 2) Extractor venv (setup uma vez)
 cd ../extractor
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
-# Then point the API to it via env var:
+# Aponte a API para o python da venv via env var:
 #   APP_Extractor__PythonPath=$(pwd)/venv/bin/python3
 
 # 3) Frontend
@@ -55,51 +67,51 @@ npm install
 npm run dev                   # http://localhost:5173
 ```
 
-The DB schema is created automatically on first run (`DatabaseInitializer.cs`).
+O schema do banco é criado automaticamente no primeiro `dotnet run` (`DatabaseInitializer.cs`).
 
-## Project structure
+## Estrutura
 ```
 apps/
 ├── api/         # .NET 10 — Minimal APIs, Dapper, SQLite
 ├── web/         # Vue 3 + Vite + Tailwind + ECharts
-└── extractor/   # Python — pdfplumber-based parser
+└── extractor/   # Python — parser baseado em pdfplumber
 docker/
 ├── api.Dockerfile, web.Dockerfile, nginx.conf
 docker-compose.yml
-docs/ARQUITETURA.md     # deeper architecture notes (pt-BR)
+docs/ARQUITETURA.md     # arquitetura detalhada
 ```
 
-## Configuration
-All settings can be overridden via env vars with the `APP_` prefix and `__` as section separator:
+## Configuração
+Tudo pode ser sobrescrito via variável de ambiente com prefixo `APP_` e `__` como separador de seção:
 
-| Var | Default | Notes |
+| Variável | Default | Observação |
 |---|---|---|
-| `APP_Jwt__Secret` | — | **Required**, ≥ 32 chars |
+| `APP_Jwt__Secret` | — | **Obrigatório**, ≥ 32 chars |
 | `APP_Jwt__AccessTokenExpireMinutes` | `30` | |
 | `APP_Jwt__RefreshTokenExpireDays` | `7` | |
-| `APP_Cors__Origins` | `http://localhost:5173,http://localhost:8080` | comma-separated |
-| `APP_Storage__MaxFileSizeMB` | `10` | per file |
-| `APP_Database__Path` | `../../database/salarios.db` | resolved from binary dir |
+| `APP_Cors__Origins` | `http://localhost:5173,http://localhost:8080` | separados por vírgula |
+| `APP_Storage__MaxFileSizeMB` | `10` | por arquivo |
+| `APP_Database__Path` | `../../database/salarios.db` | resolvido a partir do binário |
 
-In `docker-compose.yml` these are wired from `.env` automatically.
+No `docker-compose.yml` essas variáveis são preenchidas a partir do `.env` automaticamente.
 
-## Privacy
-Everything runs locally. No analytics, no third-party API calls. Your `database/salarios.db` and uploaded PDFs are git-ignored — they never leave your machine unless *you* push them.
+## Privacidade
+Tudo roda localmente. Sem analytics, sem chamadas a APIs de terceiros. O arquivo `database/salarios.db` e os PDFs em `apps/api/uploads/` estão no `.gitignore` — não saem da sua máquina a menos que *você* faça commit/push.
 
-## Parser coverage
-The Python parser targets common Brazilian payroll layouts. It auto-detects:
-- Period via "Competência: MM/YYYY" or "Mês de YYYY" (with filename fallbacks)
-- Company via line above CNPJ or "Razão Social:" label
-- Position via "Cargo:" / "Função:" / CBO label
-- Type (monthly / vacation / 13th / complementary)
+## Cobertura do parser
+O parser Python foi feito para layouts comuns de holerite no Brasil. Detecta automaticamente:
+- Período via "Competência: MM/YYYY" ou "Mês de YYYY" (com fallback no nome do arquivo)
+- Empresa via linha acima do CNPJ ou label "Razão Social:"
+- Cargo via labels "Cargo:" / "Função:" / "CBO"
+- Tipo (mensal / férias / 13º / complementar)
 
-If your PDF doesn't parse cleanly, open an issue with a redacted sample.
+Se o seu PDF não for parseado corretamente, abra uma issue com um exemplo redigido.
 
 ## Roadmap
-- [ ] Async processing queue for large batches
-- [ ] Export reports (CSV/PDF)
-- [ ] Comparison with INSS/IRRF tables to flag overpayment
-- [ ] Multi-language UI (currently pt-BR only)
+- [ ] Fila de processamento assíncrono para uploads grandes
+- [ ] Exportar relatórios (CSV/PDF)
+- [ ] Comparar com tabelas oficiais de INSS/IRRF e sinalizar inconsistências
+- [ ] Internacionalização da interface
 
-## License
-MIT — see [LICENSE](./LICENSE).
+## Licença
+MIT — veja [LICENSE](./LICENSE).
